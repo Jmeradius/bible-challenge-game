@@ -1705,7 +1705,7 @@ function updateLanguage(){
  $("settingsTitle").textContent=tr("Mipangilio","Settings");$("soundLabel").textContent=tr("Sauti","Sound");$("musicLabel").textContent=tr("Wimbo","Music");
  $("backSettings").textContent=tr("← Rudi Nyumbani","← Back home");$("completeTitle").textContent=tr("Hongera!","Congratulations!");
  $("nextLevelBtn").textContent=tr("Level inayofuata","Next level");$("levelsBtn").textContent=tr("Chagua Level","Choose a level");
- renderLevels();save();
+ renderLevels();save();if(typeof applyFullEnglishInterface==="function")applyFullEnglishInterface();
 }
 function grade1Complete(){return true;}
 function gradeLevelNumber(index){const g=levels[index].grade||1;return index-levels.findIndex(l=>(l.grade||1)===g)+1;}
@@ -2077,7 +2077,14 @@ function renderBiblePassage(passages,q){
 }
 function closeBible(){$("modalBack").classList.add("hidden")}
 function speak(text){if(!("speechSynthesis" in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=0.9;speechSynthesis.speak(u)}catch(e){}}
-function playGodIsGood(){if(state.sound)speak("God is good!")}
+function playGodIsGood(){
+ if(!state.sound)return;
+ const audio=document.getElementById("godIsGoodAudio");
+ if(audio){
+   try{audio.pause();audio.currentTime=0;const p=audio.play();if(p&&p.catch)p.catch(()=>speak("God is good!"));}
+   catch(e){speak("God is good!");}
+ }else speak("God is good!");
+}
 let musicContext = null;
 async function playHallelujah(){
  if(!state.music)return;
@@ -2346,6 +2353,172 @@ body.demo-preview #gradeTabs,body.demo-preview #levelGrid,body.demo-preview #gra
  });
  const complete=$('complete');if(complete)completionObserver.observe(complete,{attributes:true,attributeFilter:['class']});
 })();
+</script>
+
+
+<!-- BCG improvement patch: real "God is good" voice + complete English interface labels -->
+<audio id="godIsGoodAudio" preload="auto" playsinline src="god-is-good.mp3"></audio>
+<script id="bcg-full-english-and-voice-fix">
+function applyFullEnglishInterface(){
+ const en=state.lang==="en";
+ document.documentElement.lang=en?"en":"sw";
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ const attr=(id,name,value)=>{const el=document.getElementById(id);if(el)el.setAttribute(name,value);};
+ if(en){
+   set("topline","Test prototype • Grades 1–12 • KJV + Swahili • Share App");
+   set("globalBackHome","← Home");
+   set("openSwBible","📖 READ THE SWAHILI BIBLE (OFFLINE)");
+   set("playerProfileHeading","👤 Player Profile");
+   set("saveNicknameBtn","Save");
+   set("profileStatus", (localStorage.getItem("bcg_player_nickname_v1")||"").trim() ? "Player name saved on this device." : "Player name has not been set.");
+   set("howTitle","How to play");
+   set("progressTitle","Your progress");
+   set("scoreLabel","Total score");
+   set("badgeLabel","Levels completed");
+   set("chooseLevel","Choose a level");
+   set("backHome","← Home");
+   set("startLessonBtn","I understand — Start questions →");
+   set("attemptHint","You have 2 attempts.");
+   set("backLevels","← Back to levels");
+   set("settingsTitle","Settings");
+   set("soundLabel","Sound");
+   set("musicLabel","Music");
+   set("backSettings","← Back home");
+   set("completeTitle","Congratulations!");
+   set("completeText","You completed the level.");
+   set("levelBadge","LEVEL COMPLETE");
+   set("nextLevelBtn","Next level");
+   set("levelsBtn","Choose a level");
+   set("playHallelujahBtn","♫ Listen to Hallelujah");
+   set("swBibleBackHome","← Back home");
+   set("closeSwBible","✕");
+   set("modalTitle","BIBLE");
+   set("modalNote","English passages may be loaded online from the KJV translation. A full Swahili translation will be added after usage permissions are confirmed.");
+   set("growthLanguage","Referrals & Friends");
+   set("growthTitle","Invite Friends & Earn Rewards");
+   set("growthIntro","Share your link and challenges with friends. This is an offline demo; online rewards require a backend.");
+   set("inviteLinkText","Your invitation link will appear here");
+   set("shareInviteBtn","📤 Share link");
+   set("copyInviteBtn","Copy link");
+   set("copyCodeBtn","Copy code");
+   set("createChallengeBtn","Create challenge");
+   set("shareChallengeBtn","Share challenge");
+   set("challengeText","You have not created a challenge yet.");
+   set("unlockSpecialBtn","Unlock Special Level — 500 pts");
+   set("growthBackBtn","← Back home");
+   set("swBibleBackHome","← Back home");
+   set("switchToSwahiliBible","📖 Swahili");
+   set("closeModal","✕");
+   set("modalNote","English passages may load online from the KJV translation. A full Swahili translation will be added after usage permissions are confirmed.");
+   const nick=document.getElementById("playerNickname");
+   if(nick){nick.placeholder="Example: Eradius";attr("playerNickname","aria-label","Player nickname");}
+   // Translate visible labels and explanatory text that do not have their own IDs.
+   const replaceText=(selector,oldText,newText)=>{
+     document.querySelectorAll(selector).forEach(el=>{
+       if(el.children.length===0 && el.textContent.trim()===oldText)el.textContent=newText;
+     });
+   };
+   replaceText("#playerProfilePanel h2","👤 Wasifu wa Mchezaji / Player Profile","👤 Player Profile");
+   replaceText("#playerProfilePanel p","Tumia jina la mchezo tu; huhitaji jina lako halisi. Jina hili linahifadhiwa kwenye simu hii.","Use a nickname only; you do not need to use your real name. This name is saved on this device.");
+   replaceText("#playerProfilePanel label","Nickname / Jina la mchezo","Player nickname");
+   replaceText("#playerProfilePanel label","Kitabu","Book");
+   replaceText("#playerProfilePanel label","Sura","Chapter");
+   replaceText("#swBibleBack h2","Soma Biblia","Read the Bible");
+   replaceText("#swBibleBack label","Kitabu","Book");
+   replaceText("#swBibleBack label","Sura","Chapter");
+   replaceText("#growthHub h3","👥 Invite Friends / Alika Marafiki","👥 Invite Friends");
+   replaceText("#growthHub h3","🤔 Challenge a Friend / Changamoto kwa Rafiki","🤔 Challenge a Friend");
+   replaceText("#growthHub h3","🎁 My Rewards / Zawadi Zangu","🎁 My Rewards");
+   replaceText("#growthHub h3","🏆 Leaderboard / Orodha ya Washindani","🏆 Leaderboard");
+   replaceText("#growthHub p","Tuma link ya mwaliko. Pointi za kweli zitatolewa tu baada ya kuunganishwa na server na kuthibitishwa kwa rafiki mpya.","Send an invitation link. Real points will be awarded only after a server is connected and a new friend is verified.");
+   replaceText("#growthHub p","Tengeneza changamoto ya maswali 10 na utume mwaliko. Kwa sasa demo hutengeneza code ya changamoto; mchezo wa moja kwa moja kati ya akaunti utahitaji backend.","Create a 10-question challenge and send an invitation. This demo creates a challenge code; live play between accounts requires a backend.");
+   replaceText("#growthHub p","Tumia pointi kufungua Special Levels za ziada. Hii haitafungua Grade za kawaida ambazo bado zimefungwa.","Use points to unlock extra Special Levels. This will not unlock regular Grades that are still locked.");
+   replaceText("#growthHub p","Orodha ya mfano ya demo, si rankings za dunia wala data ya watumiaji halisi.","A sample demo leaderboard, not global rankings or real user data.");
+   // Footer and ad placeholder are interface elements too.
+   const footer=document.querySelector("footer");
+   if(footer)footer.textContent="Grades 1–12 • KJV + offline Swahili Bible • Prototype • Real AdMob ads are not connected yet.";
+   const ad=document.querySelector(".adspace");
+   if(ad){
+     const spans=ad.querySelectorAll("span");
+     const divs=ad.querySelectorAll(".banner-demo div");
+     if(divs.length>0 && divs[0].textContent.trim().startsWith("Tangazo la mfano"))divs[0].textContent="Demo advertisement only — real AdMob is not connected yet.";
+     ad.setAttribute("aria-label","Banner advertisement placeholder");
+   }
+ }else{
+   const restoreText=(selector,enText,swText)=>{
+     document.querySelectorAll(selector).forEach(el=>{
+       if(el.children.length===0 && (el.textContent.trim()===enText || el.textContent.trim()===swText))el.textContent=swText;
+     });
+   };
+   restoreText("#playerProfilePanel h2","👤 Player Profile","👤 Wasifu wa Mchezaji / Player Profile");
+   restoreText("#playerProfilePanel p","Use a nickname only; you do not need to use your real name. This name is saved on this device.","Tumia jina la mchezo tu; huhitaji jina lako halisi. Jina hili linahifadhiwa kwenye simu hii.");
+   restoreText("#playerProfilePanel label","Player nickname","Nickname / Jina la mchezo");
+   restoreText("#swBibleBack h2","Read the Bible","Soma Biblia");
+   restoreText("#swBibleBack label","Book","Kitabu");
+   restoreText("#swBibleBack label","Chapter","Sura");
+   restoreText("#growthHub h3","👥 Invite Friends","👥 Invite Friends / Alika Marafiki");
+   restoreText("#growthHub h3","🤔 Challenge a Friend","🤔 Challenge a Friend / Changamoto kwa Rafiki");
+   restoreText("#growthHub h3","🎁 My Rewards","🎁 My Rewards / Zawadi Zangu");
+   restoreText("#growthHub h3","🏆 Leaderboard","🏆 Leaderboard / Orodha ya Washindani");
+   restoreText("#growthHub p","Send an invitation link. Real points will be awarded only after a server is connected and a new friend is verified.","Tuma link ya mwaliko. Pointi za kweli zitatolewa tu baada ya kuunganishwa na server na kuthibitishwa kwa rafiki mpya.");
+   restoreText("#growthHub p","Create a 10-question challenge and send an invitation. This demo creates a challenge code; live play between accounts requires a backend.","Tengeneza changamoto ya maswali 10 na utume mwaliko. Kwa sasa demo hutengeneza code ya changamoto; mchezo wa moja kwa moja kati ya akaunti utahitaji backend.");
+   restoreText("#growthHub p","Use points to unlock extra Special Levels. This will not unlock regular Grades that are still locked.","Tumia pointi kufungua Special Levels za ziada. Hii haitafungua Grade za kawaida ambazo bado zimefungwa.");
+   restoreText("#growthHub p","A sample demo leaderboard, not global rankings or real user data.","Orodha ya mfano ya demo, si rankings za dunia wala data ya watumiaji halisi.");
+   set("growthLanguage","Referral & Friends");
+   set("growthTitle","Alika Marafiki & Pata Zawadi");
+   set("growthIntro","Shiriki link yako, changamoto na marafiki. Hii ni demo ya ndani; zawadi za mtandaoni zitahitaji backend.");
+   set("inviteLinkText","Link ya mwaliko itaonekana hapa");
+   set("shareInviteBtn","📤 Share link");
+   set("copyInviteBtn","Nakili link");
+   set("copyCodeBtn","Nakili code");
+   set("createChallengeBtn","Tengeneza Challenge");
+   set("shareChallengeBtn","Share Challenge");
+   set("challengeText","Bado hujatengeneza changamoto.");
+   set("unlockSpecialBtn","Fungua Special Level — 500 pts");
+   set("growthBackBtn","← Rudi Nyumbani");
+   set("switchToSwahiliBible","📖 Kiswahili");
+   set("modalNote","Mafungu ya Kiingereza yanaweza kupakiwa mtandaoni kutoka tafsiri ya KJV. Tafsiri kamili ya Kiswahili itaongezwa baada ya kuthibitisha ruhusa ya matumizi.");
+   set("topline","Prototype ya majaribio • Grades 1–12 • KJV + Kiswahili • Share App");
+   set("globalBackHome","← Nyumbani");
+   set("openSwBible","📖 SOMA BIBLIA YA KISWAHILI (OFFLINE)");
+   set("playerProfileHeading","👤 Wasifu wa Mchezaji / Player Profile");
+   set("saveNicknameBtn","Hifadhi");
+   set("swBibleBackHome","← Rudi Nyumbani");
+   set("closeSwBible","✕");
+   set("closeModal","✕");
+   set("modalTitle","BIBLE / BIBLIA");
+   set("profileStatus",(localStorage.getItem("bcg_player_nickname_v1")||"").trim()?"Jina la mchezo limehifadhiwa kwenye simu hii.":"Jina la mchezo halijawekwa.");
+   const nickSw=document.getElementById("playerNickname");
+   if(nickSw){nickSw.placeholder="Mfano: Eradius";nickSw.setAttribute("aria-label","Jina la mchezo");}
+   set("topline","Prototype ya majaribio • Grades 1–12 • KJV + Kiswahili • Share App");
+   set("globalBackHome","← Nyumbani");
+   set("openSwBible","📖 SOMA BIBLIA YA KISWAHILI (OFFLINE)");
+   set("playerProfileHeading","👤 Wasifu wa Mchezaji / Player Profile");
+   set("saveNicknameBtn","Hifadhi");
+   set("howTitle","Jinsi ya kucheza");
+   set("progressTitle","Maendeleo yako");
+   set("scoreLabel","Jumla ya alama");
+   set("badgeLabel","Level zilizokamilika");
+   set("chooseLevel","Chagua Level");
+   set("backHome","← Nyumbani");
+   set("backLevels","← Rudi kwenye Levels");
+   set("settingsTitle","Mipangilio");
+   set("soundLabel","Sauti");
+   set("musicLabel","Wimbo");
+   set("backSettings","← Rudi Nyumbani");
+   set("completeTitle","Hongera!");
+   set("completeText","Umekamilisha Level.");
+   set("levelBadge","LEVEL COMPLETE");
+   set("nextLevelBtn","Level inayofuata");
+   set("levelsBtn","Chagua Level");
+   set("playHallelujahBtn","♫ Sikiliza Hallelujah");
+   set("swBibleBackHome","← Rudi Nyumbani");
+   const nick=document.getElementById("playerNickname");
+   if(nick)nick.placeholder="Mfano: Eradius";
+   const footer=document.querySelector("footer");
+   if(footer)footer.textContent="Grades 1–12 • KJV + Biblia ya Kiswahili Offline • Si programu kamili ya Android • Matangazo halisi ya AdMob bado hayajaunganishwa.";
+ }
+}
 </script>
 
 </body>
